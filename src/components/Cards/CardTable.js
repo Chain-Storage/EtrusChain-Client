@@ -8,6 +8,8 @@ import TableDropdown from "components/Dropdowns/TableDropdown.js";
 
 export default function CardTable({ color }) {
   const [getFiles, setGetFiles] = useState([]);
+  const [currentRole, setCurrentRole] = useState([]);
+  const [totalStorage, setTotalStorage] = useState([]);
   const sleep = (milliseconds) => {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   };
@@ -17,12 +19,54 @@ export default function CardTable({ color }) {
       const fetchData = async () => {
         console.log(await window.ethereum.selectedAddress);
         const url = `http://127.0.0.1:4000/getFilesFromContract/${window.ethereum.selectedAddress}`;
+        const urlTwo = `http://127.0.0.1:4000/getAccountType/${window.ethereum.selectedAddress}`;
+
+        let fileSizes = [];
 
         await axios.get(url).then((response) => {
           console.log(response.data.data);
 
           setGetFiles(response.data.data);
         });
+
+        await axios.get(urlTwo).then((response) => {
+          console.log(response.data.data);
+
+          setCurrentRole(response.data.data);
+        });
+
+        for (let index = 0; index < getFiles.length; index++) {
+          const element = getFiles[index];
+          fileSizes.push(Number(element[1]));
+        }
+
+        console.log(fileSizes);
+        const sum = fileSizes.reduce(
+          (total, currentValue) => total + currentValue,
+          0
+        );
+        console.log(sum);
+
+        function convertBytesToGB(bytes) {
+          return bytes / 1073741824;
+        }
+
+        let gigabytes = convertBytesToGB(sum);
+        if (currentRole[1] === "normal") {
+          setTotalStorage(5);
+        } else if (currentRole[1] === "gold") {
+          setTotalStorage(50);
+        } else if (currentRole[1] === "preminum") {
+          setTotalStorage(500);
+        }
+
+        if (gigabytes > 5 && currentRole[1] === "normal") {
+          alert("You don't hava enough storage");
+        } else if (gigabytes > 50 && currentRole[1] === "gold") {
+          alert("You don't hava enough storage");
+        } else if (gigabytes > 500 && currentRole[1] === "preminum") {
+          alert("You don't hava enough storage");
+        }
       };
 
       // call the function
@@ -30,16 +74,17 @@ export default function CardTable({ color }) {
         // make sure to catch any error
         .catch(console.error);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <>
-      <button
-        type="button"
-        class="py-2.5 px-5 mr-2 mb-2 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-      >
-        Alternative
-      </button>
+      <br />
+      <br />
+
+      <p> {currentRole[1]} Account </p>
+
+      <br />
       <div
         className={
           "relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded " +
@@ -128,7 +173,7 @@ export default function CardTable({ color }) {
                     </span>
                   </th>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
-                    {data[1]} Mb
+                    {data[1] / 1000000} Mb
                   </td>
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-xs whitespace-nowrap p-4">
                     <i className="fas fa-circle text-orange-500 mr-2"></i>
