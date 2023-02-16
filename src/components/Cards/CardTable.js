@@ -26,7 +26,7 @@ export default function CardTable({ color }) {
         await axios.get(url).then((response) => {
           console.log(response.data.data);
 
-          setGetFiles(response.data.data);
+          setGetFiles(response.data.data.reverse());
         });
 
         await axios.get(urlTwo).then((response) => {
